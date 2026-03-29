@@ -76,7 +76,9 @@ export default function AuthPage() {
       }
 
       // Mock fallback for development
-      setCurrentUser(CURRENT_USER)
+      if (process.env.NODE_ENV === 'development') {
+        setCurrentUser(CURRENT_USER)
+      }
       router.push('/')
     } catch (err: any) {
       // Dev fallback: allow mock login
