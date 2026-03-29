@@ -33,6 +33,8 @@ const config: Config = {
           950: '#070810',
         },
         accent: '#a855f7',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
