@@ -78,8 +78,10 @@ export default function AuthPage() {
       // Mock fallback for development
       if (process.env.NODE_ENV === 'development') {
         setCurrentUser(CURRENT_USER)
+        router.push('/')
+      } else {
+        window.location.href = '/chat'
       }
-      router.push('/')
     } catch (err: any) {
       // Dev fallback: allow mock login
       if (process.env.NODE_ENV === 'development') {

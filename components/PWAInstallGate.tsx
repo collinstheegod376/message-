@@ -108,10 +108,19 @@ export function PWAInstallGate({ children }: { children: ReactNode }) {
         </div>
 
         {/* Install Button */}
-        <button onClick={handleInstall} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base">
-          <Download className="w-5 h-5" />
-          {isIOS ? 'How to Install' : 'Install Shredder'}
-        </button>
+        <div className="flex flex-col gap-3">
+          <button onClick={handleInstall} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base">
+            <Download className="w-5 h-5" />
+            {isIOS ? 'How to Install' : 'Install App'}
+          </button>
+          
+          <button 
+            onClick={() => setIsInstalled(true)} 
+            className="w-full py-4 text-base text-white/50 hover:text-white hover:bg-white/5 rounded-xl transition-colors font-medium"
+          >
+            Continue in Browser
+          </button>
+        </div>
 
         {/* iOS Instructions Modal */}
         {showInstructions && (
