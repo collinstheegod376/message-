@@ -186,13 +186,27 @@ CREATE POLICY "comments_insert" ON comments FOR INSERT WITH CHECK (author_id = a
 -- ==========================================
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  base_username TEXT;
+  new_username TEXT;
+  counter INTEGER := 1;
 BEGIN
+  -- Extract base username from email or metadata
+  base_username := COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1));
+  new_username := base_username;
+
+  -- Ensure username is unique by appending counter if needed (max 100 tries)
+  WHILE EXISTS (SELECT 1 FROM profiles WHERE username = new_username) AND counter < 100 LOOP
+    new_username := base_username || counter::TEXT;
+    counter := counter + 1;
+  END LOOP;
+
   INSERT INTO profiles (id, email, name, username, avatar_url)
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
-    split_part(NEW.email, '@', 1),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', base_username),
+    new_username,
     NEW.raw_user_meta_data->>'avatar_url'
   );
   RETURN NEW;
