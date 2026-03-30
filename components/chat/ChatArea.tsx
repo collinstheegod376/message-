@@ -191,7 +191,7 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
         ))}
 
         {/* Typing indicator */}
-        {isTyping && otherUser && (
+        {typingIndicators.some(t => t.conversation_id === activeConversationId && t.user_id !== currentUser?.id) && otherUser && (
           <div className="flex items-center gap-3 animate-fade-in group">
             <div className={cn('w-8 h-8 rounded-full bg-gradient-to-br flex items-center justify-center text-white text-xs font-bold shadow-md', getAvatarColor(otherUser.name))}>
               {getInitials(otherUser.name)}
