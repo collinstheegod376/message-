@@ -24,37 +24,65 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true)
 
   const fetchPosts = async () => {
+    if (!currentUser) return
     setLoading(true)
+
+    // Fetch posts with author, comment count, and check if liked by current user
     const { data: postsData, error } = await supabase
       .from('posts')
-      .select('*, author:profiles!author_id(*), comments:comments(*, author:profiles!author_id(*))')
+      .select(`
+        *,
+        author:profiles!author_id(*),
+        comments (
+          id,
+          content,
+          author_id,
+          is_anonymous,
+          created_at,
+          author:profiles!author_id(*)
+        ),
+        post_likes (
+          user_id
+        )
+      `)
       .order('created_at', { ascending: false })
       .gt('expires_at', new Date().toISOString())
 
     if (postsData) {
-      setPosts(postsData as Post[])
+      const formattedPosts = postsData.map((post: any) => ({
+        ...post,
+        like_count: post.post_likes?.length || 0,
+        comment_count: post.comments?.length || 0,
+        liked_by_me: post.post_likes?.some((l: any) => l.user_id === currentUser.id) || false
+      }))
+      setPosts(formattedPosts as Post[])
     }
     setLoading(false)
   }
 
   useEffect(() => {
-    fetchPosts()
+    if (currentUser) {
+      fetchPosts()
 
-    // Real-time listener
-    const channel = supabase
-      .channel('public:posts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
-        fetchPosts()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
-        fetchPosts()
-      })
-      .subscribe()
+      // Real-time listener
+      const channel = supabase
+        .channel('public:feed')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
+          fetchPosts()
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
+          fetchPosts()
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => {
+          fetchPosts()
+        })
+        .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
+      return () => {
+        supabase.removeChannel(channel)
+      }
     }
-  }, [])
+  }, [currentUser])
 
   const handlePost = async () => {
     if (!newPostText.trim() || !currentUser) return
@@ -70,22 +98,33 @@ export default function FeedPage() {
     if (!error) {
       setNewPostText('')
       setShowCompose(false)
+      fetchPosts() // Refresh after post
     }
     setPosting(false)
   }
 
   const handleLike = async (postId: string) => {
-    // Basic like toggling logic - in a real app, use a likes table
+    if (!currentUser) return
     const post = posts.find((p) => p.id === postId)
     if (!post) return
 
-    const { error } = await supabase
-      .from('posts')
-      .update({
-        like_count: post.liked_by_me ? post.like_count - 1 : post.like_count + 1,
-        liked_by_me: !post.liked_by_me
-      })
-      .eq('id', postId)
+    if (post.liked_by_me) {
+      // Unlike
+      await supabase
+        .from('post_likes')
+        .delete()
+        .eq('post_id', postId)
+        .eq('user_id', currentUser.id)
+    } else {
+      // Like
+      await supabase
+        .from('post_likes')
+        .insert({
+          post_id: postId,
+          user_id: currentUser.id
+        })
+    }
+    // Realtime will handle the UI update via fetchPosts in the channel listener
   }
 
   const handleComment = async (postId: string) => {
@@ -101,11 +140,13 @@ export default function FeedPage() {
 
     if (!error) {
       setCommentText('')
+      fetchPosts() // Refresh after comment
     }
   }
 
   const handleDelete = async (postId: string) => {
     await supabase.from('posts').delete().eq('id', postId)
+    fetchPosts()
   }
 
   return (

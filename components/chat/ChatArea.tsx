@@ -8,22 +8,36 @@ import {
 import { useAppStore } from '@/store/appStore'
 import { cn, formatMessageTime, getInitials, getAvatarColor, getExpiryTime } from '@/lib/utils'
 import type { Message, CallSession } from '@/types'
+import { getMessages, sendMessage } from '@/lib/supabase/chat'
 
 export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
   const {
     activeConversationId, conversations, messages, currentUser,
-    addMessage, updateConversationLastMessage, setActiveCall,
+    addMessage, setMessages, updateConversationLastMessage, setActiveCall,
     typingIndicators, isAnonymousMode,
   } = useAppStore()
   const [text, setText] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
+  const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const conversation = conversations.find((c) => c.id === activeConversationId)
   const chatMessages = activeConversationId ? messages[activeConversationId] || [] : []
   const otherUser = conversation?.participants.find((p) => p.user_id !== currentUser?.id)?.user
-  const typing = typingIndicators.filter((t) => t.conversation_id === activeConversationId)
+  
+  // Fetch messages when active conversation changes
+  useEffect(() => {
+    if (!activeConversationId) return
+
+    const fetchMsgs = async () => {
+      setLoading(true)
+      const msgs = await getMessages(activeConversationId)
+      setMessages(activeConversationId, msgs)
+      setLoading(false)
+    }
+
+    fetchMsgs()
+  }, [activeConversationId, setMessages])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -36,60 +50,36 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
     }
   }, [text])
 
-  // Simulate typing response
-  useEffect(() => {
-    if (isTyping && activeConversationId) {
-      const timeout = setTimeout(() => setIsTyping(false), 3000)
-      return () => clearTimeout(timeout)
-    }
-  }, [isTyping, activeConversationId])
-
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!text.trim() || !activeConversationId || !currentUser) return
 
-    const msg: Message = {
-      id: `msg_${Date.now()}`,
+    const content = text.trim()
+    setText('')
+
+    // Optimistic update
+    const tempId = `temp_${Date.now()}`
+    const tempMsg: Message = {
+      id: tempId,
       conversation_id: activeConversationId,
       sender_id: currentUser.id,
-      content: text.trim(),
+      content,
       type: 'text',
-      status: 'sent',
+      status: 'sending',
       is_anonymous: isAnonymousMode,
       created_at: new Date().toISOString(),
       expires_at: getExpiryTime(),
     }
+    addMessage(activeConversationId, tempMsg)
 
-    addMessage(activeConversationId, msg)
-    updateConversationLastMessage(activeConversationId, msg)
-    setText('')
-    setIsTyping(true)
+    // Real send
+    const sentMsg = await sendMessage(activeConversationId, currentUser.id, content, {
+      isAnonymous: isAnonymousMode
+    })
 
-    // Simulate reply after delay
-    if (otherUser) {
-      setTimeout(() => {
-        const replies = [
-          'Got it! Let me check on that.',
-          'That sounds great! 🔥',
-          'Interesting, tell me more...',
-          'On it! Will get back to you soon.',
-          'Nice work! The design looks premium.',
-          "Let's discuss this more in our next call.",
-        ]
-        const reply: Message = {
-          id: `msg_${Date.now() + 1}`,
-          conversation_id: activeConversationId,
-          sender_id: otherUser.id,
-          content: replies[Math.floor(Math.random() * replies.length)],
-          type: 'text',
-          status: 'delivered',
-          is_anonymous: false,
-          created_at: new Date().toISOString(),
-          expires_at: getExpiryTime(),
-        }
-        addMessage(activeConversationId, reply)
-        updateConversationLastMessage(activeConversationId, reply)
-        setIsTyping(false)
-      }, 2000 + Math.random() * 2000)
+    if (sentMsg) {
+       // Replace temp message or just rely on real-time listener if it's fast enough
+       // For now, let's just update the last message in store
+       updateConversationLastMessage(activeConversationId, sentMsg)
     }
   }
 

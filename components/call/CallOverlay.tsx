@@ -44,20 +44,53 @@ export function CallOverlay() {
     }
     fetchCallee()
 
-    const ringTimeout = setTimeout(() => setCallStatus('connecting'), 2000)
-    const connectTimeout = setTimeout(() => setCallStatus('active'), 4000)
+    if (!activeCall) return
+
+    // Create session in DB if we are the caller and it's a new call
+    const syncCall = async () => {
+      if (activeCall.id.startsWith('call_')) { // Local temp ID
+         const { data, error } = await supabase
+           .from('call_sessions')
+           .insert({
+             room_name: activeCall.room_name,
+             caller_id: activeCall.caller_id,
+             callee_id: activeCall.callee_id,
+             type: activeCall.type,
+             status: 'ringing'
+           })
+           .select()
+           .single()
+         
+         if (data) {
+           // Update local state with DB ID
+           setActiveCall({ ...activeCall, id: data.id })
+         }
+      }
+    }
+
+    syncCall()
+
+    // Listen for status changes
+    const channel = supabase
+      .channel(`call-${activeCall.id}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'call_sessions',
+        filter: `id=eq.${activeCall.id}`
+      }, (payload) => {
+        const newStatus = payload.new.status
+        setCallStatus(newStatus)
+        if (newStatus === 'ended' || newStatus === 'missed') {
+          setActiveCall(null)
+        }
+      })
+      .subscribe()
+
     return () => {
-      clearTimeout(ringTimeout)
-      clearTimeout(connectTimeout)
+      supabase.removeChannel(channel)
     }
   }, [activeCall])
-
-  // Duration timer
-  useEffect(() => {
-    if (callStatus !== 'active') return
-    const interval = setInterval(() => setDuration((d) => d + 1), 1000)
-    return () => clearInterval(interval)
-  }, [callStatus])
 
   // Auto-hide controls
   useEffect(() => {

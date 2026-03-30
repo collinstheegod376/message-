@@ -15,6 +15,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
+        // Update online status in DB
+        await supabase.from('profiles').update({ is_online: true, last_seen: new Date().toISOString() }).eq('id', session.user.id)
+
         let avatar = session.user.user_metadata?.avatar_url
         if (!avatar) {
           const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', session.user.id).single()
@@ -38,8 +41,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     initAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
+        // Update online status in DB on auth change
+        await supabase.from('profiles').update({ is_online: true, last_seen: new Date().toISOString() }).eq('id', session.user.id)
+
         setCurrentUser({
           id: session.user.id,
           name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
