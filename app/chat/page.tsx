@@ -26,6 +26,7 @@ function ChatPageContent() {
     addConversation,
     addMessage,
     updateConversationLastMessage,
+    setActiveCall,
   } = useAppStore()
   
   const [showContactInfo, setShowContactInfo] = useState(false)
@@ -87,7 +88,7 @@ function ChatPageContent() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [mounted, isAuthenticated, currentUser, targetUser, setConversations, setActiveConversation, addConversation, addMessage, updateConversationLastMessage])
+  }, [mounted, isAuthenticated, currentUser, targetUser, setConversations, setActiveConversation, addConversation, addMessage, updateConversationLastMessage, setActiveCall])
 
   useEffect(() => {
     if (mounted && !isAuthenticated) {
