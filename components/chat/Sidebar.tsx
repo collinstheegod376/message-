@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 
 const navItems = [
   { icon: MessageCircle, label: 'Chats', href: '/chat' },
-  { icon: Phone, label: 'Calls', href: '/chat/calls' },
+  { icon: Phone, label: 'Calls', href: '/calls' },
   { icon: Users, label: 'Users', href: '/users' },
   { icon: Flame, label: 'Feed', href: '/feed' },
   { icon: Settings, label: 'Settings', href: '/settings' },

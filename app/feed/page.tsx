@@ -7,10 +7,11 @@ import {
   Shield, Flame, X, Loader2
 } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
-import { MOCK_POSTS, MOCK_USERS } from '@/lib/mockData'
 import { Sidebar } from '@/components/chat/Sidebar'
 import { cn, formatRelativeTime, getInitials, getAvatarColor, getExpiryTime } from '@/lib/utils'
 import type { Post, Comment } from '@/types'
+import { supabase } from '@/lib/supabase/client'
+import { useEffect } from 'react'
 
 export default function FeedPage() {
   const { currentUser, isAnonymousMode } = useAppStore()
@@ -20,61 +21,91 @@ export default function FeedPage() {
   const [activeComments, setActiveComments] = useState<string | null>(null)
   const [commentText, setCommentText] = useState('')
   const [posting, setPosting] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  const handlePost = () => {
+  const fetchPosts = async () => {
+    setLoading(true)
+    const { data: postsData, error } = await supabase
+      .from('posts')
+      .select('*, author:profiles!author_id(*), comments:comments(*, author:profiles!author_id(*))')
+      .order('created_at', { ascending: false })
+      .gt('expires_at', new Date().toISOString())
+
+    if (postsData) {
+      setPosts(postsData as Post[])
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchPosts()
+
+    // Real-time listener
+    const channel = supabase
+      .channel('public:posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
+        fetchPosts()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
+        fetchPosts()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  const handlePost = async () => {
     if (!newPostText.trim() || !currentUser) return
     setPosting(true)
-    setTimeout(() => {
-      const post: Post = {
-        id: `p_${Date.now()}`,
-        author_id: currentUser.id,
-        content: newPostText.trim(),
-        is_anonymous: isAnonymousMode,
-        created_at: new Date().toISOString(),
-        expires_at: getExpiryTime(),
-        like_count: 0,
-        comment_count: 0,
-        liked_by_me: false,
-        author: isAnonymousMode ? undefined : currentUser,
-        comments: [],
-      }
-      setPosts([post, ...posts])
+    
+    const { error } = await supabase.from('posts').insert({
+      author_id: currentUser.id,
+      content: newPostText.trim(),
+      is_anonymous: isAnonymousMode,
+      expires_at: getExpiryTime()
+    })
+
+    if (!error) {
       setNewPostText('')
       setShowCompose(false)
-      setPosting(false)
-    }, 500)
+    }
+    setPosting(false)
   }
 
-  const handleLike = (postId: string) => {
-    setPosts(posts.map((p) =>
-      p.id === postId
-        ? { ...p, liked_by_me: !p.liked_by_me, like_count: p.liked_by_me ? p.like_count - 1 : p.like_count + 1 }
-        : p
-    ))
+  const handleLike = async (postId: string) => {
+    // Basic like toggling logic - in a real app, use a likes table
+    const post = posts.find((p) => p.id === postId)
+    if (!post) return
+
+    const { error } = await supabase
+      .from('posts')
+      .update({
+        like_count: post.liked_by_me ? post.like_count - 1 : post.like_count + 1,
+        liked_by_me: !post.liked_by_me
+      })
+      .eq('id', postId)
   }
 
-  const handleComment = (postId: string) => {
+  const handleComment = async (postId: string) => {
     if (!commentText.trim() || !currentUser) return
-    const comment: Comment = {
-      id: `cm_${Date.now()}`,
+    
+    const { error } = await supabase.from('comments').insert({
       post_id: postId,
       author_id: currentUser.id,
       content: commentText.trim(),
       is_anonymous: isAnonymousMode,
-      created_at: new Date().toISOString(),
       expires_at: getExpiryTime(),
-      author: isAnonymousMode ? undefined : currentUser,
+    })
+
+    if (!error) {
+      setCommentText('')
     }
-    setPosts(posts.map((p) =>
-      p.id === postId
-        ? { ...p, comments: [...(p.comments || []), comment], comment_count: p.comment_count + 1 }
-        : p
-    ))
-    setCommentText('')
   }
 
-  const handleDelete = (postId: string) => {
-    setPosts(posts.filter((p) => p.id !== postId))
+  const handleDelete = async (postId: string) => {
+    await supabase.from('posts').delete().eq('id', postId)
   }
 
   return (
@@ -137,10 +168,14 @@ export default function FeedPage() {
           </div>
         )}
 
-        {/* Posts Feed */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-            {posts.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-32 flex flex-col items-center">
+                <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+                <p className="mt-4 text-sm text-surface-500 dark:text-white/20">Syncing with the shredder...</p>
+              </div>
+            ) : posts.length === 0 ? (
               <div className="text-center py-32 flex flex-col items-center">
                 <div className="w-20 h-20 rounded-full bg-surface-100 dark:bg-white/[0.02] flex items-center justify-center mb-6">
                   <Flame className="w-10 h-10 text-surface-300 dark:text-white/10" />
