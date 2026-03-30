@@ -7,10 +7,18 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { cn, formatDuration, getInitials, getAvatarColor } from '@/lib/utils'
-import { MOCK_USERS } from '@/lib/mockData'
+import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '@/lib/supabase/client'
+
+interface CalleeProfile {
+  id: string
+  name: string
+  avatar_url: string | null
+}
 
 export function CallOverlay() {
-  const { activeCall, setActiveCall, currentUser } = useAppStore()
+  const { activeCall, setActiveCall, currentUser, conversations } = useAppStore()
+  const [callee, setCallee] = useState<CalleeProfile | null>(null)
   const [isMuted, setIsMuted] = useState(false)
   const [isCameraOn, setIsCameraOn] = useState(true)
   const [isScreenShare, setIsScreenShare] = useState(false)
@@ -21,18 +29,28 @@ export function CallOverlay() {
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const controlsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const callee = MOCK_USERS.find((u) => u.id === activeCall?.callee_id)
   const isVideoCall = activeCall?.type === 'video'
 
-  // Simulate call connecting
   useEffect(() => {
+    const fetchCallee = async () => {
+      if (!activeCall) return
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, name, avatar_url')
+        .eq('id', activeCall.callee_id)
+        .single()
+      
+      if (data) setCallee(data)
+    }
+    fetchCallee()
+
     const ringTimeout = setTimeout(() => setCallStatus('connecting'), 2000)
     const connectTimeout = setTimeout(() => setCallStatus('active'), 4000)
     return () => {
       clearTimeout(ringTimeout)
       clearTimeout(connectTimeout)
     }
-  }, [])
+  }, [activeCall])
 
   // Duration timer
   useEffect(() => {
@@ -83,20 +101,24 @@ export function CallOverlay() {
 
   if (isMinimized) {
     return (
-      <div className="fixed bottom-6 right-6 z-[100] animate-scale-in">
-        <div className="glass-strong rounded-2xl p-4 flex items-center gap-3 shadow-2xl cursor-pointer" onClick={() => setIsMinimized(false)}>
-          <div className={cn('w-10 h-10 rounded-full bg-gradient-to-br flex items-center justify-center text-white text-sm font-bold', getAvatarColor(callee?.name || 'U'))}>
+      <motion.div 
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="fixed bottom-20 right-6 z-[100] shadow-2xl"
+      >
+        <div className="glass-strong rounded-3xl p-4 flex items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setIsMinimized(false)}>
+          <div className={cn('w-12 h-12 rounded-full border-2 border-brand-500/20 flex items-center justify-center text-white text-sm font-bold', getAvatarColor(callee?.name || 'U'))}>
             {getInitials(callee?.name || 'U')}
           </div>
           <div>
-            <p className="text-sm font-semibold">{callee?.name}</p>
-            <p className="text-xs text-emerald-400">{formatDuration(duration)}</p>
+            <p className="text-sm font-bold text-white leading-tight">{callee?.name}</p>
+            <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-tighter">{formatDuration(duration)}</p>
           </div>
-          <button onClick={(e) => { e.stopPropagation(); endCall() }} className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center hover:bg-red-500 transition-colors ml-2">
+          <button onClick={(e) => { e.stopPropagation(); endCall() }} className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center hover:bg-red-500 transition-all hover:scale-110 active:scale-90 ml-2">
             <PhoneOff className="w-4 h-4 text-white" />
           </button>
         </div>
-      </div>
+      </motion.div>
     )
   }
 

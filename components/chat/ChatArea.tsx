@@ -117,18 +117,18 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
   // Empty state
   if (!activeConversationId || !conversation) {
     return (
-      <section className="flex-1 flex flex-col items-center justify-center bg-surface-900/30">
-        <div className="text-center space-y-4 animate-fade-in">
-          <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mx-auto">
-            <MessageCircle className="w-10 h-10 text-white/10" />
+      <section className="flex-1 flex flex-col items-center justify-center bg-surface-50/50 dark:bg-surface-900/30 transition-colors duration-300">
+        <div className="text-center space-y-6 animate-fade-in px-6">
+          <div className="w-24 h-24 rounded-3xl bg-white dark:bg-white/5 flex items-center justify-center mx-auto shadow-xl border border-surface-200 dark:border-white/10">
+            <MessageCircle className="w-12 h-12 text-brand-500/20" />
           </div>
-          <div>
-            <h2 className="font-display font-bold text-xl text-white/20 mb-1">Select a conversation</h2>
-            <p className="text-sm text-white/10">Choose a chat to start messaging</p>
+          <div className="space-y-2">
+            <h2 className="font-display font-bold text-2xl text-surface-900 dark:text-white mb-1">Your conversations</h2>
+            <p className="text-sm text-surface-500 dark:text-white/30 max-w-[280px] mx-auto">Select a chat to start messaging securely with Shredder's end-to-end encryption.</p>
           </div>
-          <div className="flex items-center justify-center gap-2 text-white/10 text-xs">
-            <Lock className="w-3 h-3" />
-            <span>End-to-end encrypted • Messages self-destruct in 24h</span>
+          <div className="flex items-center justify-center gap-2 text-surface-400 dark:text-white/10 text-[10px] font-bold uppercase tracking-widest bg-surface-100 dark:bg-white/5 py-2 px-4 rounded-full">
+            <Lock className="w-3 h-3 text-brand-500/40" />
+            <span>Secured • Self-Destructing</span>
           </div>
         </div>
       </section>
@@ -136,9 +136,9 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
   }
 
   return (
-    <section className="flex-1 flex flex-col bg-surface-900/30 relative overflow-hidden">
+    <section className="flex-1 flex flex-col bg-white dark:bg-surface-900/30 relative overflow-hidden transition-colors duration-300">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex justify-between items-center px-6 py-3 glass-strong border-b border-white/5">
+      <header className="sticky top-0 z-30 flex justify-between items-center px-6 py-4 glass-strong border-b border-surface-200 dark:border-white/5">
         <button onClick={onToggleInfo} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="relative">
             {otherUser?.avatar_url ? (
@@ -151,24 +151,24 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
             {otherUser?.is_online && <span className="online-dot" />}
           </div>
           <div>
-            <h2 className="font-display font-bold text-base text-white">
+            <h2 className="font-display font-bold text-base text-surface-900 dark:text-white">
               {conversation.name || otherUser?.name || 'Chat'}
             </h2>
-            <p className={cn('text-[11px] font-semibold tracking-wide uppercase', otherUser?.is_online ? 'text-emerald-400' : 'text-white/25')}>
+            <p className={cn('text-[10px] font-bold tracking-widest uppercase mt-0.5', otherUser?.is_online ? 'text-emerald-500' : 'text-surface-400 dark:text-white/25')}>
               {otherUser?.is_online ? 'Active Now' : 'Offline'}
             </p>
           </div>
         </button>
 
-        <div className="flex items-center gap-1">
-          <button onClick={() => startCall('video')} className="p-2.5 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-all" title="Video call">
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => startCall('video')} className="p-2.5 rounded-xl text-surface-400 dark:text-white/40 hover:text-brand-500 dark:hover:text-white hover:bg-brand-50 dark:hover:bg-white/5 transition-all" title="Video call">
             <Video className="w-5 h-5" />
           </button>
-          <button onClick={() => startCall('audio')} className="p-2.5 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-all" title="Audio call">
+          <button onClick={() => startCall('audio')} className="p-2.5 rounded-xl text-surface-400 dark:text-white/40 hover:text-brand-500 dark:hover:text-white hover:bg-brand-50 dark:hover:bg-white/5 transition-all" title="Audio call">
             <PhoneIcon className="w-5 h-5" />
           </button>
-          <div className="h-5 w-px bg-white/10 mx-1" />
-          <button onClick={onToggleInfo} className="p-2.5 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-all">
+          <div className="h-5 w-px bg-surface-200 dark:bg-white/10 mx-1" />
+          <button onClick={onToggleInfo} className="p-2.5 rounded-xl text-surface-400 dark:text-white/40 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-white/5 transition-all">
             <MoreVertical className="w-5 h-5" />
           </button>
         </div>
@@ -177,16 +177,16 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 scrollbar-none">
         {/* E2E encryption notice */}
-        <div className="flex justify-center py-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 text-white/20 text-[10px]">
-            <Lock className="w-3 h-3" />
-            <span>Messages are end-to-end encrypted and self-destruct in 24h</span>
+        <div className="flex justify-center py-4">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-100 dark:bg-white/5 text-surface-500 dark:text-white/20 text-[10px] font-bold uppercase tracking-tighter shadow-sm">
+            <Lock className="w-3 h-3 text-brand-500/40" />
+            <span>End-to-end encrypted • Self-destructs 24h</span>
           </div>
         </div>
 
         {/* Date separator */}
-        <div className="flex items-center justify-center">
-          <span className="px-4 py-1 rounded-full bg-white/5 text-[10px] font-bold text-white/20 uppercase tracking-widest">
+        <div className="flex items-center justify-center py-2">
+          <span className="px-4 py-1 rounded-full bg-surface-50 dark:bg-white/[0.02] text-[9px] font-bold text-surface-400 dark:text-white/10 uppercase tracking-[0.2em] border border-surface-200 dark:border-white/5">
             Today
           </span>
         </div>
@@ -202,16 +202,16 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
 
         {/* Typing indicator */}
         {isTyping && otherUser && (
-          <div className="flex items-center gap-3 animate-fade-in">
-            <div className={cn('w-8 h-8 rounded-full bg-gradient-to-br flex items-center justify-center text-white text-xs font-bold', getAvatarColor(otherUser.name))}>
+          <div className="flex items-center gap-3 animate-fade-in group">
+            <div className={cn('w-8 h-8 rounded-full bg-gradient-to-br flex items-center justify-center text-white text-xs font-bold shadow-md', getAvatarColor(otherUser.name))}>
               {getInitials(otherUser.name)}
             </div>
-            <div className="bg-white/5 px-4 py-3 rounded-2xl rounded-bl-none flex gap-1.5">
-              <div className="typing-dot" />
-              <div className="typing-dot" />
-              <div className="typing-dot" />
+            <div className="bg-surface-100 dark:bg-white/5 px-4 py-3 rounded-2xl rounded-bl-none flex gap-1.5 shadow-sm">
+              <div className="typing-dot bg-brand-500" />
+              <div className="typing-dot bg-brand-500" />
+              <div className="typing-dot bg-brand-500" />
             </div>
-            <span className="text-[10px] text-white/20 italic">{otherUser.name} is typing...</span>
+            <span className="text-[10px] text-surface-400 dark:text-white/20 font-medium">{otherUser.name} is typing...</span>
           </div>
         )}
 
@@ -219,13 +219,13 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
       </div>
 
       {/* Input */}
-      <footer className="p-4 glass-light border-t border-white/5">
-        <div className="max-w-4xl mx-auto flex items-end gap-2 bg-white/5 p-2 rounded-2xl">
+      <footer className="p-4 bg-white dark:bg-transparent border-t border-surface-200 dark:border-white/5">
+        <div className="max-w-4xl mx-auto flex items-end gap-2 bg-surface-100 dark:bg-white/5 p-2 rounded-2xl border border-surface-200 dark:border-white/10 shadow-inner">
           <div className="flex items-center gap-0.5 pb-1">
-            <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-white/30 hover:text-white/50">
+            <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-200 dark:hover:bg-white/10 transition-colors text-surface-400 dark:text-white/30 hover:text-brand-500 dark:hover:text-white/50">
               <Plus className="w-5 h-5" />
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-white/30 hover:text-white/50">
+            <button className="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl hover:bg-surface-200 dark:hover:bg-white/10 transition-colors text-surface-400 dark:text-white/30 hover:text-brand-500 dark:hover:text-white/50">
               <Smile className="w-5 h-5" />
             </button>
           </div>
@@ -235,26 +235,26 @@ export function ChatArea({ onToggleInfo }: { onToggleInfo: () => void }) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
+            placeholder="Shred your message..."
             rows={1}
-            className="flex-1 bg-transparent border-0 focus:ring-0 text-sm py-2.5 px-2 resize-none max-h-32 text-white placeholder-white/20 outline-none"
+            className="flex-1 bg-transparent border-0 focus:ring-0 text-base py-2.5 px-3 resize-none max-h-40 text-surface-900 dark:text-white placeholder-surface-400 dark:placeholder-white/20 outline-none"
           />
 
-          <div className="flex items-center gap-0.5 pb-1">
-            <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-white/30 hover:text-white/50">
+          <div className="flex items-center gap-1.5 pb-1 pr-1">
+            <button className="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl hover:bg-surface-200 dark:hover:bg-white/10 transition-colors text-surface-400 dark:text-white/30 hover:text-brand-500 dark:hover:text-white/50">
               <Mic className="w-5 h-5" />
             </button>
             <button
               onClick={handleSend}
               disabled={!text.trim()}
               className={cn(
-                'w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200',
+                'w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300',
                 text.trim()
-                  ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-400 active:scale-95'
-                  : 'bg-white/5 text-white/15 cursor-not-allowed'
+                  ? 'bg-brand-600 text-white shadow-xl shadow-brand-500/30 hover:bg-brand-500 active:scale-90'
+                  : 'bg-surface-200 dark:bg-white/5 text-surface-400 dark:text-white/15 cursor-not-allowed'
               )}
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-5 h-5" />
             </button>
           </div>
         </div>

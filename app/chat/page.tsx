@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/store/appStore'
-import { CURRENT_USER, MOCK_CONVERSATIONS, MOCK_MESSAGES } from '@/lib/mockData'
 import { Sidebar } from '@/components/chat/Sidebar'
 import { ConversationList } from '@/components/chat/ConversationList'
 import { ChatArea } from '@/components/chat/ChatArea'
@@ -14,9 +13,6 @@ export default function ChatPage() {
   const router = useRouter()
   const {
     isAuthenticated,
-    setCurrentUser,
-    setConversations,
-    setMessages,
     activeCall,
     activeConversationId,
   } = useAppStore()
@@ -25,16 +21,10 @@ export default function ChatPage() {
 
   useEffect(() => {
     setMounted(true)
-    // Dev mode: auto-load mock data
-    if (process.env.NODE_ENV === 'development' && !isAuthenticated) {
-      setCurrentUser(CURRENT_USER)
-      setConversations(MOCK_CONVERSATIONS)
-      Object.entries(MOCK_MESSAGES).forEach(([convId, msgs]) => setMessages(convId, msgs))
-    }
   }, [])
 
   useEffect(() => {
-    if (mounted && !isAuthenticated && process.env.NODE_ENV !== 'development') {
+    if (mounted && !isAuthenticated) {
       router.push('/auth')
     }
   }, [mounted, isAuthenticated, router])
@@ -42,12 +32,12 @@ export default function ChatPage() {
   if (!mounted) return null
 
   return (
-    <div className="h-screen flex overflow-hidden bg-surface-900">
+    <div className="h-screen flex overflow-hidden bg-surface-50 dark:bg-surface-900 transition-colors duration-300">
       {/* Sidebar Nav */}
       <Sidebar />
 
       {/* Main Area */}
-      <main className="flex-1 flex ml-[72px] md:ml-[240px] h-full">
+      <main className="flex-1 flex max-md:pb-[68px] md:ml-[240px] h-full">
         {/* Chat List */}
         <ConversationList />
 

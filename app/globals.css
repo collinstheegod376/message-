@@ -4,6 +4,28 @@
 
 @layer base {
   :root {
+    --background: 240 10% 98%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+  }
+
+  .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -28,20 +50,22 @@
 
 @layer base {
   * {
-    @apply border-surface-700/50;
+    @apply border-surface-200 dark:border-surface-700/50;
   }
   body {
-    @apply bg-surface-950 text-foreground font-sans antialiased;
+    @apply bg-surface-50 dark:bg-surface-950 text-foreground font-sans antialiased transition-colors duration-300;
+    min-height: 100vh;
+  }
+  .dark body {
     background-image: theme('backgroundImage.mesh-dark');
     background-attachment: fixed;
-    min-height: 100vh;
   }
 }
 
 @layer components {
   .input-base {
-    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 transition-all duration-200 outline-none;
-    @apply focus:bg-white/10 focus:border-brand-500/50 focus:ring-4 focus:ring-brand-500/10;
+    @apply w-full bg-white dark:bg-white/5 border border-surface-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-surface-900 dark:text-white placeholder:text-surface-400 dark:placeholder:text-white/20 transition-all duration-200 outline-none;
+    @apply focus:bg-surface-50 dark:focus:bg-white/10 focus:border-brand-500/50 focus:ring-4 focus:ring-brand-500/10;
   }
 
   .btn-primary {
@@ -49,19 +73,19 @@
   }
 
   .btn-secondary {
-    @apply bg-white/5 hover:bg-white/10 text-white font-semibold rounded-xl border border-white/10 transition-all duration-200 active:scale-95;
+    @apply bg-surface-100 dark:bg-white/5 hover:bg-surface-200 dark:hover:bg-white/10 text-surface-900 dark:text-white font-semibold rounded-xl border border-surface-200 dark:border-white/10 transition-all duration-200 active:scale-95;
   }
 
   .glass {
-    @apply bg-surface-900/60 backdrop-blur-xl border border-white/5;
+    @apply bg-white/70 dark:bg-surface-900/60 backdrop-blur-xl border border-surface-200/50 dark:border-white/5;
   }
 
   .glass-strong {
-    @apply bg-[#0d0f1a]/80 backdrop-blur-2xl border border-white/10 shadow-2xl;
+    @apply bg-white/90 dark:bg-[#0d0f1a]/80 backdrop-blur-2xl border border-surface-200/50 dark:border-white/10 shadow-2xl;
   }
 
   .glass-card {
-    @apply glass hover:bg-surface-800/80 transition-all duration-300;
+    @apply glass hover:bg-white/80 dark:hover:bg-surface-800/80 transition-all duration-300;
   }
 
   .text-gradient {

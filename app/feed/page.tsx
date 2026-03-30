@@ -14,7 +14,7 @@ import type { Post, Comment } from '@/types'
 
 export default function FeedPage() {
   const { currentUser, isAnonymousMode } = useAppStore()
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS)
+  const [posts, setPosts] = useState<Post[]>([])
   const [newPostText, setNewPostText] = useState('')
   const [showCompose, setShowCompose] = useState(false)
   const [activeComments, setActiveComments] = useState<string | null>(null)
@@ -78,17 +78,19 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="h-screen flex overflow-hidden bg-surface-900">
+    <div className="h-screen flex overflow-hidden bg-surface-50 dark:bg-surface-900 transition-colors duration-300">
       <Sidebar />
-      <main className="flex-1 ml-[72px] md:ml-[240px] flex flex-col">
+      <main className="flex-1 max-md:pb-[68px] md:ml-[240px] flex flex-col h-full overflow-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-30 glass-strong border-b border-white/5 px-6 py-4">
+        <header className="sticky top-0 z-30 glass-strong border-b border-surface-200/50 dark:border-white/5 px-6 py-4">
           <div className="max-w-2xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Flame className="w-6 h-6 text-brand-400" />
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                <Flame className="w-5 h-5" />
+              </div>
               <div>
-                <h1 className="font-display font-bold text-lg">Feed</h1>
-                <p className="text-[11px] text-white/30">Posts self-destruct in 24 hours</p>
+                <h1 className="font-display font-bold text-lg text-surface-900 dark:text-white">Feed</h1>
+                <p className="text-[11px] text-surface-500 dark:text-white/30 tracking-wide uppercase">Posts shred in 24h</p>
               </div>
             </div>
             <button onClick={() => setShowCompose(true)} className="btn-primary py-2 px-4 flex items-center gap-2 text-sm">
@@ -139,9 +141,12 @@ export default function FeedPage() {
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
             {posts.length === 0 ? (
-              <div className="text-center py-20 text-white/15">
-                <Flame className="w-12 h-12 mx-auto mb-3" />
-                <p className="text-sm">No posts yet. Be the first to share!</p>
+              <div className="text-center py-32 flex flex-col items-center">
+                <div className="w-20 h-20 rounded-full bg-surface-100 dark:bg-white/[0.02] flex items-center justify-center mb-6">
+                  <Flame className="w-10 h-10 text-surface-300 dark:text-white/10" />
+                </div>
+                <h3 className="text-lg font-bold text-surface-900 dark:text-white mb-2">The feed is empty</h3>
+                <p className="text-sm text-surface-500 dark:text-white/20 max-w-[240px]">Anything posted here will self-destruct in 24 hours. Start the vibe!</p>
               </div>
             ) : (
               posts.map((post) => (

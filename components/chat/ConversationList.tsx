@@ -17,17 +17,17 @@ export function ConversationList() {
   })
 
   return (
-    <section className="w-80 flex flex-col border-r border-white/5 bg-surface-900/50 flex-shrink-0">
+    <section className="w-full md:w-80 flex flex-col border-r border-surface-200 dark:border-white/5 bg-white dark:bg-surface-900/50 flex-shrink-0 transition-colors duration-300">
       {/* Search */}
       <div className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 group-focus-within:text-brand-500 transition-colors" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search conversations..."
-            className="w-full bg-white/5 border-none rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
+            placeholder="Search chats..."
+            className="w-full bg-surface-100 dark:bg-white/5 border border-surface-200 dark:border-white/10 rounded-2xl py-3 pl-11 pr-4 text-sm text-surface-900 dark:text-white placeholder-surface-400 dark:placeholder-white/25 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500/50 transition-all shadow-inner"
           />
         </div>
       </div>
@@ -74,10 +74,10 @@ function ConversationItem({
     <button
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left group',
+        'w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 text-left group mx-1',
         isActive
-          ? 'bg-brand-500/10 border-l-4 border-brand-500'
-          : 'hover:bg-white/5 border-l-4 border-transparent'
+          ? 'bg-brand-50 dark:bg-brand-500/10 shadow-sm border border-brand-500/20 scale-[1.02]'
+          : 'hover:bg-surface-50 dark:hover:bg-white/5 border border-transparent'
       )}
     >
       {/* Avatar */}
@@ -99,22 +99,22 @@ function ConversationItem({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-center mb-0.5">
-          <h3 className={cn('text-sm font-semibold truncate', isActive ? 'text-white' : 'text-white/80')}>
+        <div className="flex justify-between items-center mb-1">
+          <h3 className={cn('text-sm font-bold truncate transition-colors', isActive ? 'text-brand-600 dark:text-brand-400' : 'text-surface-900 dark:text-white/80')}>
             {name}
           </h3>
           {conversation.last_message && (
-            <span className={cn('text-[10px] flex-shrink-0', isActive ? 'text-brand-400' : 'text-white/25')}>
+            <span className={cn('text-[10px] flex-shrink-0 font-medium', isActive ? 'text-brand-500/60 dark:text-brand-400/60' : 'text-surface-400 dark:text-white/25')}>
               {formatConversationTime(conversation.last_message.created_at)}
             </span>
           )}
         </div>
         {conversation.last_message && (
-          <p className="text-xs text-white/30 truncate">
+          <p className={cn('text-[11px] truncate transition-colors', isActive ? 'text-brand-600/60 dark:text-brand-400/60 font-medium' : 'text-surface-500 dark:text-white/30')}>
             {conversation.last_message.sender_id === currentUserId && (
-              <span className="text-white/40">You: </span>
+              <span className="opacity-50 font-bold mr-1">You:</span>
             )}
-            {truncate(conversation.last_message.content, 40)}
+            {truncate(conversation.last_message.content, 35)}
           </p>
         )}
       </div>

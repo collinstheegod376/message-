@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { PWAInstallGate } from '@/components/PWAInstallGate'
 import { supabase } from '@/lib/supabase/client'
-import { CURRENT_USER } from '@/lib/mockData'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
@@ -14,25 +13,25 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Initial fetch of session
     const initAuth = async () => {
-      // In dev mode, if we already have mock user, keep it
-      if (process.env.NODE_ENV === 'development') {
-        setCurrentUser(CURRENT_USER)
-      } else {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          setCurrentUser({
-            id: session.user.id,
-            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
-            email: session.user.email || '',
-            avatar_url: session.user.user_metadata?.avatar_url,
-            is_online: true,
-            last_seen: new Date().toISOString(),
-            bio: null,
-            role: 'user',
-            created_at: new Date().toISOString()
-          })
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        let avatar = session.user.user_metadata?.avatar_url
+        if (!avatar) {
+          const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', session.user.id).single()
+          if (profile?.avatar_url) avatar = profile.avatar_url
         }
+        setCurrentUser({
+          id: session.user.id,
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
+          email: session.user.email || '',
+          avatar_url: avatar,
+          is_online: true,
+          last_seen: new Date().toISOString(),
+          bio: null,
+          role: 'user',
+          created_at: new Date().toISOString()
+        })
       }
       setMounted(true)
     }
@@ -40,23 +39,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
     initAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (process.env.NODE_ENV !== 'development') {
-        if (session?.user) {
-          setCurrentUser({
-            id: session.user.id,
-            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
-            email: session.user.email || '',
-            avatar_url: session.user.user_metadata?.avatar_url,
-            is_online: true,
-            last_seen: new Date().toISOString(),
-            bio: null,
-            role: 'user',
-            created_at: new Date().toISOString()
-          })
-        } else {
-          setCurrentUser(null)
-        }
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
+          email: session.user.email || '',
+          avatar_url: session.user.user_metadata?.avatar_url,
+          is_online: true,
+          last_seen: new Date().toISOString(),
+          bio: null,
+          role: 'user',
+          created_at: new Date().toISOString()
+        })
+      } else {
+        setCurrentUser(null)
       }
     })
 
@@ -74,10 +71,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-surface-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex items-center justify-center transition-colors duration-300">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-white/40 text-sm">Loading Shredder...</span>
+          <span className="text-surface-500 dark:text-white/40 text-sm">Loading Shredder...</span>
         </div>
       </div>
     )
